@@ -28,19 +28,24 @@ async def user_by_id(db: Annotated[Session, Depends(get_db)], user_id: int):
 
 @router.post('/create')
 async def create_user(db: Annotated[Session, Depends(get_db)], create_user: CreateUser):
-
-    db.execute(insert(User).values(username=create_user.username,
+    try:
+        db.execute(insert(User).values(username=create_user.username,
                                    firstname=create_user.firstname,
                                    lastname=create_user.lastname,
                                    age=create_user.age,
                                    slug=slugify(create_user.username)))
 
-    db.commit()
-    return {
-        'status_code': status.HTTP_201_CREATED,
-        'transaction': 'Successful'
-    }
+        db.commit()
+        return {
+            'status_code': status.HTTP_201_CREATED,
+            'transaction': 'Successful'
+        }
 
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"User with username '{create_user.username}' already exists."
+        )
 
 @router.put('/update')
 async def update_user(db: Annotated[Session, Depends(get_db)], user_id: int, update_user: UpdateUser):
